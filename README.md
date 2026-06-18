@@ -1,6 +1,6 @@
 # Video Converter GUI - кроссплатформенный GUI для видео-конвертера с системой очередей задач.
 
-![Пример интерфейса](examples/example1.png)
+<img width="1474" height="913" alt="1" src="https://github.com/user-attachments/assets/dff2611c-7e44-4daa-abf9-738cd83e6d99" />
 
 ## О проекте
 
