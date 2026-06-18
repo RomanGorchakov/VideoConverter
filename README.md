@@ -74,6 +74,9 @@ coverage html
 
 После выполнения команды отчёт будет доступен в каталоге `htmlcov/index.html`.
 
+<img width="756" height="292" alt="4" src="https://github.com/user-attachments/assets/baf8b46e-e7e4-4698-b81e-45248c81b770" />
+
+
 ## Поддерживаемые возможности конвертации
 
 1) изменение выходного формата аудио- или видео-файла;
