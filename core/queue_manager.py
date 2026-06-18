@@ -169,7 +169,7 @@ class QueueManager(QObject):
         self.is_paused = False
 
         if self.converter:
-            self.converter.stop()
+            self.converter.cancel_current_task()
 
         if self.current_task:
             self.current_task.status = (
@@ -227,25 +227,24 @@ class QueueManager(QObject):
             pending_task
         )
 
-        self.converter = ConverterService(
-            input_path=pending_task.input_file,
-            output_path=pending_task.output_file,
-            settings=pending_task.settings
+        self.converter = ConverterService()
+
+        self.converter.task_progress.connect(
+            lambda task, progress:
+            self._on_progress(progress)
         )
 
-        self.converter.progress_changed.connect(
-            self._on_progress
+        self.converter.task_finished.connect(
+            lambda task:
+            self._on_finished()
         )
 
-        self.converter.finished.connect(
-            self._on_finished
+        self.converter.task_failed.connect(
+            lambda task, error:
+            self._on_error(error)
         )
 
-        self.converter.error.connect(
-            self._on_error
-        )
-
-        self.converter.start()
+        self.converter.start_conversion(self.current_task)
 
     # ==========================
     # CALLBACKS

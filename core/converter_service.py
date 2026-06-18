@@ -49,7 +49,7 @@ class ConversionWorker(QObject):
 
         try:
             self.task.status = (
-                TaskStatus.IN_PROGRESS
+                TaskStatus.RUNNING
             )
 
             duration = (
@@ -64,6 +64,9 @@ class ConversionWorker(QObject):
                     self.task
                 )
             )
+            
+            print("COMMAND:")
+            print(command)
 
             self.process = subprocess.Popen(
                 command,
@@ -72,6 +75,8 @@ class ConversionWorker(QObject):
                 text=True,
                 encoding="utf-8"
             )
+            
+            print("PROCESS STARTED")
 
             while True:
 
@@ -79,12 +84,21 @@ class ConversionWorker(QObject):
                     self.cancel()
                     return
 
-                line = (
-                    self.process.stdout.readline()
-                )
+                line = (self.process.stdout.readline())
+
+                print("LINE:", repr(line))
 
                 if not line:
                     break
+                    
+                self.process.wait()
+
+                print("RETURN CODE:", self.process.returncode)
+                print("STDERR:")
+                print(self.process.stderr.read())
+
+                if self.process.returncode != 0:
+                    print(self.process.stderr.read())
 
                 progress = (
                     FFmpegUtils
@@ -220,6 +234,22 @@ class ConverterService(QObject):
         self.worker.moveToThread(
             self.thread
         )
+        
+        self.worker.conversion_finished.connect(
+            self.thread.quit
+        )
+
+        self.worker.conversion_failed.connect(
+            self.thread.quit
+        )
+
+        self.thread.finished.connect(
+            self.thread.deleteLater
+        )
+
+        self.worker.destroyed.connect(
+            self.thread.deleteLater
+        )
 
         # ====================
         # SIGNALS
@@ -239,20 +269,22 @@ class ConverterService(QObject):
 
         self.worker.conversion_finished.connect(
             lambda:
-            self._on_finished(task)
+            self.task_finished.emit(task)
         )
 
         self.worker.conversion_failed.connect(
             lambda error:
-            self._on_failed(
-                task,
-                error
-            )
+            self.task_failed.emit(task, error)
         )
 
         self.task_started.emit(task)
 
         self.thread.start()
+        
+        self.thread.finished.connect(
+            lambda:
+            self._thread_finished(task)
+        )
 
     def cancel_current_task(self):
         """
@@ -308,14 +340,9 @@ class ConverterService(QObject):
         Очистка ресурсов.
         """
 
-        try:
-            if self.thread:
-                self.thread.quit()
-                self.thread.wait()
-
-            self.worker = None
-            self.thread = None
-            self.current_task = None
-
-        except Exception:
-            pass
+        self.worker = None
+        self.thread = None
+        self.current_task = None
+        
+    def _thread_finished(self, task):
+        self._cleanup()

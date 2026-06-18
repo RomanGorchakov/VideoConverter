@@ -123,10 +123,17 @@ class TaskTable(QWidget):
         # Статус
         # ==========================
 
-        status_item = (
-            QTableWidgetItem(
-                str(task.status)
-            )
+        STATUS_TEXT = {
+            "pending": "Ожидание",
+            "running": "Выполняется",
+            "completed": "Завершено",
+            "failed": "Ошибка",
+            "cancelled": "Отменено"
+        }
+        
+        status_item = QTableWidgetItem(
+            STATUS_TEXT.get(task.status.value,
+                            task.status.value)
         )
 
         # ==========================
@@ -152,8 +159,7 @@ class TaskTable(QWidget):
 
         output_item = (
             QTableWidgetItem(
-                task.output_file
-                or "-"
+                Path(task.output_file).name
             )
         )
 
@@ -370,7 +376,7 @@ class TaskTable(QWidget):
             "waiting": "#E0E0E0",
             "running": "#FFF59D",
             "completed": "#A5D6A7",
-            "error": "#EF9A9A",
+            "failed": "#EF9A9A",
             "cancelled": "#BDBDBD"
         }
 

@@ -62,8 +62,6 @@ class MainWindow(QMainWindow):
         self.setup_statusbar()
         self.connect_signals()
 
-        self.load_saved_tasks()
-
     # ==========================================================
     # НАСТРОЙКА ОКНА
     # ==========================================================
@@ -632,10 +630,7 @@ class MainWindow(QMainWindow):
     # ==========================================================
 
     def open_settings(self):
-        dialog = SettingsDialog(
-            self.database_manager,
-            self
-        )
+        dialog = SettingsDialog(self)
 
         dialog.exec()
 
@@ -649,7 +644,43 @@ class MainWindow(QMainWindow):
             .get_all_tasks()
         )
 
-        for task in tasks:
-            self.task_table.load_task(
+        for task_data in tasks:
+
+            if isinstance(task_data, dict):
+
+                settings = ConversionSettings(
+                    output_format=task_data.get(
+                        "output_format",
+                        "mp4"
+                    )
+                )
+
+                task = ConversionTask(
+                    id=task_data.get("id"),
+                    input_file=task_data.get(
+                        "input_file",
+                        ""
+                    ),
+                    output_file=task_data.get(
+                        "output_file",
+                        ""
+                    ),
+                    settings=settings,
+                    progress=task_data.get(
+                        "progress",
+                        0
+                    ),
+                    status=TaskStatus(
+                        task_data.get(
+                            "status",
+                            "pending"
+                        )
+                    )
+                )
+
+            else:
+                task = task_data
+
+            self.task_table.add_task(
                 task
             )

@@ -103,14 +103,16 @@ class DatabaseManager:
             INSERT INTO conversion_tasks (
                 input_file,
                 output_file,
+                output_format,
                 status,
                 progress
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
         """, (
             task.input_file,
             task.output_file,
-            str(task.status),
+            task.settings.output_format,
+            task.status.value,
             task.progress
         ))
 
