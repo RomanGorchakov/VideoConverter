@@ -76,7 +76,6 @@ coverage html
 
 <img width="756" height="292" alt="4" src="https://github.com/user-attachments/assets/baf8b46e-e7e4-4698-b81e-45248c81b770" />
 
-
 ## Поддерживаемые возможности конвертации
 
 1) изменение выходного формата аудио- или видео-файла;
@@ -85,3 +84,5 @@ coverage html
 4) настройка FPS;
 5) последовательная обработка файлов;
 6) отображение состояния задач.
+
+<img width="620" height="308" alt="6" src="https://github.com/user-attachments/assets/6e664d11-a547-4560-9682-b4a148063a6d" />
