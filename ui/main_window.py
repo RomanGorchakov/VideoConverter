@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -33,6 +33,7 @@ from core.ffmpeg_utils import FFmpegUtils
 from ui.task_table import TaskTable
 from ui.settings_dialog import SettingsDialog
 from ui.file_picker import FilePicker
+from ui.styles import APP_STYLE
 
 
 class MainWindow(QMainWindow):
@@ -61,6 +62,10 @@ class MainWindow(QMainWindow):
         self.setup_toolbar()
         self.setup_statusbar()
         self.connect_signals()
+        
+        settings = QSettings("VideoConverterGUI", "Settings")
+        theme = settings.value("theme", "Светлая")
+        self.apply_theme(theme)
 
     # ==========================================================
     # НАСТРОЙКА ОКНА
@@ -465,6 +470,27 @@ class MainWindow(QMainWindow):
     # ==========================================================
     # SIGNALS
     # ==========================================================
+    
+    def on_task_progress(self, task, progress):
+        self.task_table.update_progress(
+            task.id,
+            progress
+        )
+
+        self.progress_bar.setValue(progress)
+        
+    def on_task_finished(self, task):
+        self.task_table.update_progress(
+            task.id,
+            100
+        )
+
+        self.task_table.update_task_status(
+            task.id,
+            "completed"
+        )
+
+        self.progress_bar.setValue(100)
 
     def connect_signals(self):
         self.add_button.clicked.connect(
@@ -489,6 +515,14 @@ class MainWindow(QMainWindow):
 
         self.settings_button.clicked.connect(
             self.open_settings
+        )
+        
+        self.queue_manager.task_progress.connect(
+            self.on_task_progress
+        )
+
+        self.queue_manager.task_finished.connect(
+            self.on_task_finished
         )
 
     # ==========================================================
@@ -570,14 +604,21 @@ class MainWindow(QMainWindow):
             .currentText()
         )
 
-        for file_path in (
-            self.selected_files
-        ):
-            output_path = str(
-                Path(file_path)
-                .with_suffix(
-                    f".{output_format}"
-                )
+        for file_path in (self.selected_files):
+            settings_storage = QSettings(
+                "VideoConverterGUI",
+                "Settings"
+            )
+
+            output_folder = settings_storage.value(
+                "output_folder",
+                str(Path(file_path).parent)
+            )
+            
+            output_path = FilePicker.generate_output_path(
+                file_path,
+                output_folder,
+                output_format
             )
 
             settings = (
@@ -629,10 +670,16 @@ class MainWindow(QMainWindow):
     # SETTINGS
     # ==========================================================
 
+    def apply_theme(self, theme):
+        if theme == "Тёмная":
+            self.setStyleSheet(APP_STYLE)
+        else:
+            self.setStyleSheet("")
+
     def open_settings(self):
         dialog = SettingsDialog(self)
-
-        dialog.exec()
+        if dialog.exec():
+            self.apply_theme(dialog.get_theme())
 
     # ==========================================================
     # DATABASE

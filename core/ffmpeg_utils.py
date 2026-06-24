@@ -246,40 +246,35 @@ class FFmpegUtils:
         line: str,
         duration_seconds: float
     ) -> int:
-        """
-        Получение прогресса конвертации.
-        """
 
         try:
-            if "out_time_ms=" not in line:
+            if "out_time_ms=" in line:
+                value = int(line.split("=")[1])
+
+            elif "out_time_us=" in line:
+                value = int(line.split("=")[1])
+
+            else:
                 return -1
 
-            out_time_ms = int(
-                line.strip().split("=")[1]
-            )
-
-            current_seconds = (
-                out_time_ms / 1_000_000
-            )
+            current_seconds = value / 1_000_000
 
             if duration_seconds <= 0:
                 return 0
 
             progress = int(
-                (
-                    current_seconds
-                    / duration_seconds
-                ) * 100
+                current_seconds
+                / duration_seconds
+                * 100
             )
 
-            progress = max(
+            return max(
                 0,
                 min(100, progress)
             )
 
-            return progress
-
-        except Exception:
+        except Exception as e:
+            print("PROGRESS ERROR:", e)
             return -1
 
     @staticmethod

@@ -71,7 +71,7 @@ class ConversionWorker(QObject):
             self.process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 text=True,
                 encoding="utf-8"
             )
@@ -79,45 +79,31 @@ class ConversionWorker(QObject):
             print("PROCESS STARTED")
 
             while True:
-
                 if self._cancelled:
                     self.cancel()
                     return
 
-                line = (self.process.stdout.readline())
-
+                line = self.process.stdout.readline()
                 print("LINE:", repr(line))
 
                 if not line:
                     break
-                    
-                self.process.wait()
 
-                print("RETURN CODE:", self.process.returncode)
-                print("STDERR:")
-                print(self.process.stderr.read())
+                if "progress=" in line:
+                    print("PROGRESS LINE:", line)
 
-                if self.process.returncode != 0:
-                    print(self.process.stderr.read())
-
-                progress = (
-                    FFmpegUtils
-                    .parse_ffmpeg_progress(
-                        line,
-                        duration
-                    )
+                progress = FFmpegUtils.parse_ffmpeg_progress(
+                    line,
+                    duration
                 )
 
                 if progress >= 0:
-                    self.task.progress = (
-                        progress
-                    )
-
-                    self.progress_changed.emit(
-                        progress
-                    )
+                    self.task.progress = progress
+                    self.progress_changed.emit(progress)
 
             self.process.wait()
+            print("PROCESS FINISHED")
+            print("RETURN CODE:", self.process.returncode)
 
             if self.process.returncode == 0:
                 self.task.progress = 100

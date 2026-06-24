@@ -292,6 +292,10 @@ class QueueManager(QObject):
                     self.current_task.id,
                     "completed"
                 )
+                self.database_manager.update_task_progress(
+                    self.current_task.id,
+                    100
+                )
             except Exception as e:
                 print(
                     f"Ошибка БД: {e}"
